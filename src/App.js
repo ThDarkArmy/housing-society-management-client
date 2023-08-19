@@ -14,6 +14,8 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
+import Announcements from "./pages/Announcements";
+import EventManagementPage from "./pages/EventManagementPage";
 
 
 const App = ()=> {
@@ -24,10 +26,12 @@ const App = ()=> {
         <Route path="/" element={<Home/>}/>
         <Route path="/login-register" element={<LoginRegister/>}/>
         <Route path="/reset-password" element={<ForgetPassword/>}/>
-        {/* <Route path="/super-admin-panel" element={<AdminPanel/>}/>
-        <Route path="/secretary-panel" element={<SecretaryPanel/>}/> */}
+        <Route path="/admin-panel" element={<AdminPanel/>}/>
+        <Route path="/secretary-panel" element={<SecretaryPanel/>}/>
         <Route path="/profile" element={<ProfilePage />}/>
         <Route path="/buildings/:id" element={<BuildingPage />}/>
+        <Route path="/announcements/" element={<Announcements />}/>
+        <Route path="/events" element={<EventManagementPage />}/>
       </Routes>
     </Router>
     <Footer/>

@@ -11,13 +11,9 @@ import {
   DialogContent,
   TextField,
   Typography,
-  CardContent,
-  Card,
   Select,
   MenuItem,
-  Divider,
-  Grid,
-  CardMedia
+  Divider
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import MuiAlert from "@mui/material/Alert";
@@ -31,9 +27,8 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Snackbar from "../components/Snackbar";
-
-
 import { useNavigate } from "react-router-dom";
+import BuildingCard from "../components/BuildingCard";
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
@@ -61,36 +56,34 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const SellerPanel = () => {
+const SecretaryPanel = () => {
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
   const [openEditForm, setOpenEditForm] = useState(false);
   const [openAddForm, setOpenAddForm] = useState(false);
-  const [openSuccessSnack, setOpenSuccessSnack] = useState(false);
-  const [openErrorSnack, setOpenErrorSnack] = useState(false);
-  const [successMsg, setSuccessMsg] = useState();
-  const [errorMsg, setErrorMsg] = useState();
-  const [products, setProducts] = useState();
-  const [productId, setProductId] = useState();
-  const [stock, setstock] = useState();
-  const [brand, setbrand] = useState("");
-  const [image, setimage] = useState("");
-  const [category, setCategory] = useState("");
-  const [returnPolicy, setReturnPolicy] = useState("");
-  const [description, setdescription] = useState("")
+  const [building, setBuilding] = useState();
+  const [flatId, setFlatId] = useState();
+  const [flatType, setFlatType] = useState("");
 
-  const [name, setname] = useState("");
-  const [manufacturingDate, setManufacturingDate] = useState("");
-  const [price, setprice] = useState();
+  const [flatNumber, setFlatNumber] = useState("");
+  const [floorNumber, setFloorNumber] = useState("");
+  const [rent, setRent] = useState();
 
   const [showValidationError, setshowValidationError] = useState(false);
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("");
-  const [orderData, setorderData] = useState([]);
-  const [totalPrice, setTotalPrice] = useState(0);
+  const [flats, setFlats] = useState([]);
+
+  const [openAnnouncementForm, setOpenAnnouncementForm] = useState(false);
+
+  const [detail, setDetail] = useState("");
+  const [title, setTitle] = useState("");
+  const [announcementId, setAnnouncementId] = useState("");
+
+  const [announcements, setAnnouncements] = useState([]);
 
   useEffect(()=> {
     if(!token){
@@ -104,58 +97,9 @@ const SellerPanel = () => {
 },[])
 
   useEffect(()=> {
-      loadMyOrders()
+      loadMyBuilding();
+      loadAnnouncements();
   },[])
-
-  const loadMyOrders = async () => {
-      try {
-          const response = await axios({
-              method: 'get',
-              url: `${BASE_URL}/orders/all`,
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          });
-          if (response.data) {
-              const data = response.data.filter(item=> item.orderItems.length > 0)
-              setorderData(data);
-              let totalPrice=0;
-              response.data.map(item=> item.orderItems.map((d)=>{ 
-                  if(d.status !== 'CANCELLED'){
-                      totalPrice+=d.product.price*d.quantity
-                  }
-                  }))
-              setTotalPrice(totalPrice);
-          } 
-      } catch (error) {
-         
-          console.log(error);
-      }
-  }
-
-  const approveOrder = async (id) => {
-      let status = 'Delivered';
-      try {
-          const response = await axios({
-              method: 'put',
-              url: `${BASE_URL}/orders/${id}`,
-              data: JSON.stringify({status: status}),
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          });
-          if (response.data) {
-              setSnackbarMessage("Order delivered successfully");
-              setSnackbarSeverity("success");
-              setOpenSnackbar(true);
-          } else {
-              setSnackbarMessage("Order couldn't delivered");
-              setSnackbarSeverity("error");
-              setOpenSnackbar(true);
-          }
-      } catch (error) {
-          setSnackbarMessage("Order couldn't delivered");
-          setSnackbarSeverity("error");
-          setOpenSnackbar(true);
-          console.log(error);
-      }
-  }
 
   useEffect(() => {
     if (!token) {
@@ -165,52 +109,62 @@ const SellerPanel = () => {
 
 
 
-  const deleteProduct = async (productId) => {
+  const loadAnnouncements = async() => {
+    try {
+      const response = await axios({
+        method: "get",
+        url: BASE_URL + "/announcements/my-announcements",
+        headers: {
+          "content-type": "application/json",
+          Authorization: "Bearer " + token,
+        }
+      });
+      if (response.data) {
+        setAnnouncements(response.data);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  const deleteFlat = async (flatId) => {
     try {
       const response = await axios({
         method: "delete",
-        url: BASE_URL + "/products/" + productId,
+        url: BASE_URL + "/flats/" + flatId,
         headers: {
-          "content-type": "application/json",
           Authorization: "Bearer " + token,
         },
       });
 
       if (response.data) {
-        setOpenSuccessSnack(true);
-        setSuccessMsg("Product deleted successfully");
-        setOpenEditForm(false);
-        let prd = products.filter((product) => product.id !== productId);
-        setProducts(prd);
-        setname("");
-        setprice("");
-        setManufacturingDate("");
+        showSnackbar("Flat deleted successfully", "success");
+        let prd = flats.filter((flat) => flat.id !== flatId);
+        setFlats(prd);
+        setFlatNumber("");
+        setRent("");
+        setFloorNumber("");
       }
     } catch (err) {
       console.log(err);
-      setOpenErrorSnack(true);
-      setErrorMsg("Error occured while deleting product");
+      showSnackbar("Error occured while deleting flat", "error");
     }
   };
 
-  const editProduct = async () => {
+  const editFlat = async () => {
     if (
-      name === "" ||
-      manufacturingDate === "" ||
-      price === "" ||
-      stock === "" ||
-      brand === "" ||
-      category === "" ||
-      description === "" ||
-      returnPolicy===""
+      flatNumber === "" ||
+      floorNumber === "" ||
+      rent === "" ||
+      flatType === ""
     ) {
       setshowValidationError(true);
     } else {
-      const productData = { name, manufacturingDate, price, brand, stock, category, description, returnPolicy };
+      const productData = { flatNumber, floorNumber, rent, flatType };
       try {
         const response = await axios({
           method: "put",
-          url: BASE_URL + "/products/update/" + productId,
+          url: BASE_URL + "/flats/" + flatId,
           headers: {
             "content-type": "application/json",
             Authorization: "Bearer " + token,
@@ -219,441 +173,390 @@ const SellerPanel = () => {
         });
 
         if (response.data) {
-          setOpenSuccessSnack(true);
-          setSuccessMsg("Product updated successfully");
-          setOpenEditForm(false);
-          let prd = products.map((product) =>
-            product.id === productId ? response.data : product
+          showSnackbar("Flat updated successfully", "success");
+          let prd = flats.map((flat) =>
+            flat.id === flatId ? response.data : flat
           );
-          setProducts(prd);
-          setname("");
-          setprice("");
-          setManufacturingDate("");
-          setbrand("");
-          setCategory("");
-          setdescription("");
-          setReturnPolicy("");
+          setFlats(prd);
+          setOpenEditForm(false);
+          setFlatNumber("");
+          setRent("");
+          setFloorNumber("");
+          setFlatType("");
         }
       } catch (err) {
         console.log(err);
-        setOpenErrorSnack(true);
-        setErrorMsg("Error occured while updating product");
+        showSnackbar("Error occured while updating flat", "error");
       }
     }
   };
 
-  const addProduct = async () => {
-    console.log("category", category)
+  const showSnackbar = (msg, severity) => {
+    setSnackbarMessage(msg);
+    setSnackbarSeverity(severity);
+    setOpenSnackbar(true);
+  }
+
+  const hideSnackbar = () => {
+    setSnackbarMessage("");
+    setSnackbarSeverity("");
+    setOpenSnackbar(false);
+  }
+
+  const addFlat = async () => {
     if (
-      name === "" ||
-      brand === "" ||
-      manufacturingDate === "" ||
-      price === null ||
-      stock === null||
-      image === null ||
-      category === ""||
-      description === "" ||
-      returnPolicy===""
+      flatNumber === "" ||
+      flatType === "" ||
+      floorNumber === "" ||
+      rent === "" 
     ) {
       setshowValidationError(true);
     } else {
-      const productData = new FormData();
-      productData.append("name", name);
-      productData.append("brand", brand);
-      productData.append("manufacturingDate", manufacturingDate);
-      productData.append("price", price);
-      productData.append("stock", stock);
-      productData.append("image", image);
-      productData.append("category", category);
-      productData.append("description", description);
-      productData.append("returnPolicy", returnPolicy);
+      const flatData = { flatNumber, floorNumber, rent, flatType };
       try {
         const response = await axios({
           method: "post",
-          url: BASE_URL + "/products/",
+          url: BASE_URL + "/flats/"+building.id,
           headers: {
-            "content-type": "multipart/form-data",
+            "content-type": "application/json",
             Authorization: "Bearer " + token,
           },
-          data: productData,
+          data: flatData,
         });
 
         if (response.data) {
-          setOpenSuccessSnack(true);
-          setSuccessMsg("Product added successfully");
+          setFlats([...flats, response.data]);
+          showSnackbar("Flat added successfully", "success");
           setOpenAddForm(false);
-          setProducts([...products, response.data]);
-          setname("");
-          setprice();
-          setManufacturingDate("");
-          setbrand("");
-          setdescription("");
-          setstock()
-          setReturnPolicy("");
+          setFlatNumber("");
+          setRent("");
+          setFloorNumber("");
+          setFlatType("");
         }
       } catch (err) {
         console.log(err);
-        setOpenErrorSnack(true);
-        setErrorMsg("Error occured while adding product");
+        showSnackbar("Error occured while adding flat", "error");
       }
     }
   };
 
-  const loadProducts = async () => {
+  const loadMyBuilding = async () => {
       try {
         const response = await axios({
           method: "get",
-          url: BASE_URL + "/products/my-products",
+          url: BASE_URL + "/buildings/my-building",
           headers: {
             "content-type": "application/json",
             Authorization: "Bearer " + token,
           }
         });
         if (response.data) {
-          setProducts(response.data)
+          setBuilding(response.data);
+          setFlats(response.data.flats);
         }
       } catch (err) {
         console.log(err);
-        setOpenErrorSnack(true);
-        setErrorMsg("Error occured while adding product");
       }
-  };
+  }
 
-  useEffect(() => {
-   loadProducts()
-  }, []);
-
-  const handleOpenEditForm = (product) => {
+  const handleOpenEditForm = (flat) => {
     setOpenEditForm(true);
-    setProductId(product.id);
-    setname(product.name);
-    setprice(product.price);
-    setManufacturingDate(product.manufacturingDate);
-    setstock(product.stock);
-    setbrand(product.brand)
-    setdescription(product.description);
-    setCategory(product.category);
-    setReturnPolicy(product.returnPolicy);
+    setFlatId(flat.id);
+    setFlatNumber(flat.flatNumber);
+    setRent(flat.rent);
+    setFloorNumber(flat.floorNumber);
+    setFlatType(flat.flatType)
   };
 
   const handleOpenAddForm = () => {
     setOpenAddForm(true);
   };
 
+
+  const addAnnouncement = async () => {
+    if (
+      title === "" ||
+      detail === ""
+    ) {
+      setshowValidationError(true);
+    } else {
+      const announcementData = { title, detail };
+      try {
+        const response = await axios({
+          method: "post",
+          url: BASE_URL + "/announcements",
+          headers: {
+            "content-type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+          data: announcementData
+        });
+
+        if (response.data) {
+          setAnnouncements([...announcements, response.data]);
+          showSnackbar("Announcement added successfully", "success");
+          setOpenAnnouncementForm(false);
+          setDetail("");
+          setTitle("");
+          setAnnouncementId("")
+        }
+      } catch (err) {
+        console.log(err);
+        showSnackbar("Error occured while adding announcements", "error");
+      }
+    }
+  };
+
+  const updateAnnouncement = async () => {
+    if (
+      title === "" ||
+      detail === ""
+    ) {
+      setshowValidationError(true);
+    } else {
+      const announcementData = { title, detail };
+      try {
+        const response = await axios({
+          method: "put",
+          url: BASE_URL + "/announcements/"+announcementId,
+          headers: {
+            "content-type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+          data: announcementData
+        });
+
+        if (response.data) {
+          const ann = announcements.map(a=> a.id===response.data.id ? response.data: a);
+          setAnnouncements(ann);
+          showSnackbar("Announcement updated successfully", "success");
+          setOpenAnnouncementForm(false);
+          setDetail("");
+          setTitle("");
+          setAnnouncementId("")
+        }
+      } catch (err) {
+        console.log(err);
+        showSnackbar("Error occured while updating announcements", "error");
+      }
+    }
+  };
+
+  const deleteAnnouncement = async (id) => {
+      try {
+        const response = await axios({
+          method: "delete",
+          url: BASE_URL + "/announcements/"+id,
+          headers: {
+            "content-type": "application/json",
+            Authorization: "Bearer " + token,
+          }
+        });
+
+        if (response.data) {
+          const ann = announcements.filter(a=> a.id!==id);
+          setAnnouncements(ann);
+          showSnackbar("Announcement deleted successfully", "success");
+          setOpenAnnouncementForm(false);
+        }
+      } catch (err) {
+        console.log(err);
+        showSnackbar("Error occured while deleting announcements", "error");
+      }
+  };
+
   return (
     <div>
       <Header />
       <Box sx={{mt: 9, padding: 1}}>
-      <Dialog open={openEditForm} onClose={() => setOpenEditForm(false)}>
-          <DialogTitle>Edit Product</DialogTitle>
+      <Dialog open={openAnnouncementForm} onClose={() => setOpenAnnouncementForm(false)}>
+          <DialogTitle>{announcementId ? "Edit Announcement": "Add Announcement"}</DialogTitle>
           <DialogContent>
             {showValidationError && (
               <Alert severity="error">All the fields are mandatory</Alert>
             )}
-            <TextField
+             <TextField
               size="small"
-              label="Name"
+              label="Title"
               fullWidth
               onChange={(e) => {
                 setshowValidationError(false);
-                setname(e.target.value);
+                setTitle(e.target.value);
               }}
+              value={title}
+              sx={{ mt: 2 }}
+            />
+
+            <TextField
+              size="small"
+              label="Detail"
+              fullWidth
+              onChange={(e) => {
+                setshowValidationError(false);
+                setDetail(e.target.value);
+              }}
+              multiline
+              rows={4}
+              value={detail}
+              sx={{ mt: 2 }}
+            />
+            
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {setOpenAnnouncementForm(false)
+              setAnnouncementId("");
+              setDetail("");
+              setTitle("");
+            }}>Cancel</Button>
+            <Button onClick={()=> {
+              if(announcementId){
+                updateAnnouncement();
+              }else{
+                addAnnouncement();
+              }
+            }}>{announcementId? "Update" : "Add"}</Button>
+          </DialogActions>
+        </Dialog>
+      <Dialog open={openEditForm} onClose={() => setOpenEditForm(false)}>
+          <DialogTitle>Edit Flat</DialogTitle>
+          <DialogContent>
+            {showValidationError && (
+              <Alert severity="error">All the fields are mandatory</Alert>
+            )}
+             <TextField
+              size="small"
+              label="Flat Number"
+              fullWidth
+              onChange={(e) => {
+                setshowValidationError(false);
+                setFlatNumber(e.target.value);
+              }}
+              value={flatNumber}
               sx={{ mt: 2 }}
             />
             <TextField
               size="small"
-              label="Manufacturing Date"
-              fullWidth
-              type="date"
-              onChange={(e) => {
-                setshowValidationError(false);
-                setManufacturingDate(e.target.value);
-              }}
-              sx={{ mt: 2 }}
-            />
-            <TextField
-              size="small"
-              label="Price"
+              label="Floor Number"
               fullWidth
               type="number"
               onChange={(e) => {
                 setshowValidationError(false);
-                setprice(e.target.value);
+                setFloorNumber(e.target.value);
               }}
-              value={price}
+              value={floorNumber}
               sx={{ mt: 2 }}
             />
             <TextField
               size="small"
-              label="stock"
+              label="Rent"
               fullWidth
-              value={stock}
               type="number"
               onChange={(e) => {
                 setshowValidationError(false);
-                setstock(e.target.value);
+                setRent(e.target.value);
               }}
-              sx={{ mt: 2 }}
-            />
-            <TextField
-              size="small"
-              label="Return Policy"
-              fullWidth
-              value={returnPolicy}
-              type="text"
-              onChange={(e) => {
-                setshowValidationError(false);
-                setReturnPolicy(e.target.value);
-              }}
+              value={rent}
               sx={{ mt: 2 }}
             />
             <Select
               size="small"
-              label="Brand"
+              label="Flat Type"
               fullWidth
-              value={brand}
+              value={flatType}
               type="text"
               onChange={(e) => {
                 setshowValidationError(false);
-                setbrand(e.target.value);
+                setFlatType(e.target.value);
               }}
               sx={{ mt: 2 }}
             >
-              <MenuItem value="Godrej">Godrej</MenuItem>
-              <MenuItem value="Havells">Havells</MenuItem>
-              <MenuItem value="Rio">Rio</MenuItem>
-              <MenuItem value="Puma">Puma</MenuItem>
-              <MenuItem value="Bata">Bata</MenuItem>
-              <MenuItem value="Red Tape">Red Tape</MenuItem>
+              <MenuItem value="1RK">1RK</MenuItem>
+              <MenuItem value="1BHK">1BHK</MenuItem>
+              <MenuItem value="2BHK">2BHK</MenuItem>
+              <MenuItem value="3BHK">3BHK</MenuItem>
+              <MenuItem value="4BHK">4BHK</MenuItem>
+              <MenuItem value="5BHK">5BHK</MenuItem>
             </Select>
-              <Select
-              size="small"
-              label="Category"
-              fullWidth
-              value={category}
-              onChange={(e) => {
-                setshowValidationError(false);
-                setCategory(e.target.value);
-              }}
-              sx={{ mt: 2 }}
-            >
-               <MenuItem value="Electronics">Electronics</MenuItem>
-              <MenuItem value="Clothing">Clothing</MenuItem>
-              <MenuItem value="Furniture">Furniture</MenuItem>
-              <MenuItem value="Grocery">Grocery</MenuItem>
-            </Select>
-            <TextField
-              size="small"
-              label="Description"
-              fullWidth
-              multiline
-              row={4}
-              value={description}
-              type="text"
-              onChange={(e) => {
-                setshowValidationError(false);
-                setdescription(e.target.value);
-              }}
-              sx={{ mt: 2 }}
-            />
-          
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenEditForm(false)}>Cancel</Button>
-            <Button onClick={editProduct}>Update</Button>
+            <Button onClick={editFlat}>Update</Button>
           </DialogActions>
         </Dialog>
         <Dialog open={openAddForm} onClose={() => setOpenAddForm(false)}>
-          <DialogTitle>Add Product</DialogTitle>
+          <DialogTitle>Add Flat</DialogTitle>
           <DialogContent>
             {showValidationError && (
               <Alert severity="error">All the fields are mandatory</Alert>
             )}
             <TextField
               size="small"
-              label="Name"
+              label="Flat Number"
               fullWidth
               onChange={(e) => {
                 setshowValidationError(false);
-                setname(e.target.value);
+                setFlatNumber(e.target.value);
               }}
               sx={{ mt: 2 }}
             />
             <TextField
               size="small"
-              label="Manufacturing Date"
-              fullWidth
-              type="date"
-              onChange={(e) => {
-                setshowValidationError(false);
-                setManufacturingDate(e.target.value);
-              }}
-              sx={{ mt: 2 }}
-            />
-            <TextField
-              size="small"
-              label="Price"
+              label="Floor Number"
               fullWidth
               type="number"
               onChange={(e) => {
                 setshowValidationError(false);
-                setprice(e.target.value);
+                setFloorNumber(e.target.value);
               }}
-              value={price}
               sx={{ mt: 2 }}
             />
             <TextField
               size="small"
-              label="stock"
+              label="Rent"
               fullWidth
-              value={stock}
               type="number"
               onChange={(e) => {
                 setshowValidationError(false);
-                setstock(e.target.value);
+                setRent(e.target.value);
               }}
-              sx={{ mt: 2 }}
-            />
-            <TextField
-              size="small"
-              label="Return Policy"
-              fullWidth
-              value={returnPolicy}
-              type="text"
-              onChange={(e) => {
-                setshowValidationError(false);
-                setReturnPolicy(e.target.value);
-              }}
+              value={rent}
               sx={{ mt: 2 }}
             />
             <Select
               size="small"
-              label="Brand"
+              label="Flat Type"
               fullWidth
-              value={brand}
+              value={flatType}
               type="text"
               onChange={(e) => {
                 setshowValidationError(false);
-                setbrand(e.target.value);
+                setFlatType(e.target.value);
               }}
               sx={{ mt: 2 }}
             >
-              <MenuItem value="Godrej">Godrej</MenuItem>
-              <MenuItem value="Havells">Havells</MenuItem>
-              <MenuItem value="Rio">Rio</MenuItem>
-              <MenuItem value="Puma">Puma</MenuItem>
-              <MenuItem value="Bata">Bata</MenuItem>
-              <MenuItem value="Red Tape">Red Tape</MenuItem>
+              <MenuItem value="1RK">1RK</MenuItem>
+              <MenuItem value="1BHK">1BHK</MenuItem>
+              <MenuItem value="2BHK">2BHK</MenuItem>
+              <MenuItem value="3BHK">3BHK</MenuItem>
+              <MenuItem value="4BHK">4BHK</MenuItem>
+              <MenuItem value="5BHK">5BHK</MenuItem>
             </Select>
-              <Select
-              size="small"
-              label="Category"
-              fullWidth
-              value={category}
-              onChange={(e) => {
-                setshowValidationError(false);
-                setCategory(e.target.value);
-              }}
-              sx={{ mt: 2 }}
-            >
-              <MenuItem value="Electronics">Electronics</MenuItem>
-              <MenuItem value="Clothing">Clothing</MenuItem>
-              <MenuItem value="Furniture">Furniture</MenuItem>
-              <MenuItem value="Grocery">Grocery</MenuItem>
-            </Select>
-              <TextField
-              size="small"
-              label="Image"
-              fullWidth
-              type="file"
-              onChange={(e) => {
-                setshowValidationError(false);
-                setimage(e.target.files[0]);
-              }}
-              sx={{ mt: 2 }}
-            />
-              
-            <TextField
-              size="small"
-              label="Description"
-              fullWidth
-              multiline
-              row={4}
-              value={description}
-              type="text"
-              onChange={(e) => {
-                setshowValidationError(false);
-                setdescription(e.target.value);
-              }}
-              sx={{ mt: 2 }}
-            />
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenAddForm(false)}>Cancel</Button>
-            <Button onClick={addProduct}>Add Product</Button>
+            <Button onClick={addFlat}>Add Flat</Button>
           </DialogActions>
         </Dialog>
         <Box sx={{ mt: 5, mb: 1 }}>
-        <Box sx={{ mt: 10, padding: 2 }}>
-              {orderData?.length>0 ?  <Grid container spacing={3}>
-                    <Grid item xs={8}>
-                        <Box sx={{ padding: 1, bgcolor: "#fff", mb:1 }}>
-                            <Typography component="div">Order Items</Typography>
-                        </Box>
-                        <Box >
-                            {orderData && orderData.map(order=> order.orderItems.map((item =>
-                                <Card sx={{ display: 'flex', mb:2 }}>
-                                    <CardMedia
-                                        component="img"
-                                        sx={{ width: 200 }}
-                                        image={item.product.imageUrl}
-                                        alt=""
-                                    />
-                                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                        <CardContent sx={{ flex: '1 0 auto' }}>
-                                            <Typography component="div" variant="h5">
-                                                {item.product.name}
-                                            </Typography>
-                                            <Typography sx={{fontSize: 14}} color="text.secondary" component="div">
-                                                {`Quantity: ${item.quantity}`}
-                                            </Typography>
-                                            <Typography sx={{fontSize: 14}}  variant="subtitle1" color="text.secondary" component="div">
-                                            {`Price: ${item.quantity*item.product.price}`}
-                                            </Typography>
-                                            <Typography sx={{fontSize: 14, color: "green"}}  variant="subtitle1" color="text.secondary" component="div">
-                                            {`Status: ${item.status}`}
-                                            </Typography>
-                                        </CardContent>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', pl: 1, pb: 1, mt:1 }}>
-                                            <Button disabled={item.status!="Pending Dispatch"} onClick={()=> approveOrder(item.id)} sx={{color: "orange"}}>Dispatch</Button>
-                                        </Box>
-                                    </Box>
-                                </Card>
-                            )))}
-                        </Box>
-                    </Grid>
-                    <Grid item xs={4}>
-                        <Box sx={{ bgcolor: "#fff", paddingLeft: 2, paddingRight: 2 }}>
-                            <Box sx={{ paddingTop: 2, paddingBottom: 2 }}>
-                                <Typography> Revenue</Typography>
-                            </Box>
-                            <Divider />
-                           
-                            <Divider />
-                            <Box sx={{ paddingTop: 2, paddingBottom: 2, bgColor: "#fff", display: "flex" }}>
-                                <Typography sx={{ fontWeight: 600 }}>Total Amount</Typography>
-                                <Typography sx={{ ml: "auto", fontWeight: 600 }}>{totalPrice}</Typography>
-                            </Box>
-                            <Divider />
-                           
-                        </Box>
-                    </Grid>
-                </Grid>: <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> <Typography sx={{fontSize: 25}}>No Orders yet!</Typography> </Box>}
-            </Box>
+
             <Snackbar openSnackbar={openSnackbar} setOpenSnackbar={setOpenSnackbar} snackbarMessage={snackbarMessage} snackbarSeverity={snackbarSeverity} />
-          <Box display="flex">
+
+            <Box sx={{ml: 2}}>
+             {building ? <BuildingCard building={building}/>: <Typography>Building not assigned yet!</Typography>}
+            </Box>
+         {flats && <Box display="flex" sx={{mt: 5, ml: 2}}>
             <Typography variant="h5" color="initial">
-              Products
+              Flats
             </Typography>
             <Button
               variant="contained"
@@ -661,67 +564,59 @@ const SellerPanel = () => {
               sx={{ ml: "auto" }}
               onClick={() => handleOpenAddForm()}
             >
-              Add Product
+              Add Flat
             </Button>
-          </Box>
-          <Box sx={{ mt: 2 }}>
+          </Box>}
+         {flats && <Box sx={{ mt: 2, ml: 2 }}>
             <TableContainer component={Paper}>
               <Table sx={{ minWidth: 700 }} aria-label="customized table">
                 <TableHead>
                   <TableRow>
-                    <StyledTableCell>Product (Id)</StyledTableCell>
-                    <StyledTableCell align="right">Name</StyledTableCell>
-                    <StyledTableCell align="right">Manufacturing Date</StyledTableCell>
-                    <StyledTableCell align="right">
-                      Price
+                    <StyledTableCell>Flat (Id)</StyledTableCell>
+                    <StyledTableCell align="left">Flat Number</StyledTableCell>
+                    <StyledTableCell align="left">Floor Number</StyledTableCell>
+                    <StyledTableCell align="left">
+                      Flat Type
                     </StyledTableCell>
-                    <StyledTableCell align="right">Brand</StyledTableCell>
-                    <StyledTableCell align="right">Stock</StyledTableCell>
-                    <StyledTableCell align="right">Category</StyledTableCell>
-                    <StyledTableCell align="right">Return Policy</StyledTableCell>
-                    <StyledTableCell align="right">Actions</StyledTableCell>
+                    <StyledTableCell align="left">Status</StyledTableCell>
+                    <StyledTableCell align="left">Rent</StyledTableCell>
+                    <StyledTableCell align="left">Actions</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {products &&
-                    products.map((row) => (
+                  {flats &&
+                    flats.map((row) => (
                       <StyledTableRow key={row.id}>
                         <StyledTableCell component="th" scope="row">
                           {row.id}
                         </StyledTableCell>
                         <StyledTableCell
-                          align="right"
+                          align="left"
                           component="th"
                           scope="row"
                         >
-                          {row.name}
+                          {row.flatNumber}
                         </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {row.manufacturingDate}
+                        <StyledTableCell align="left">
+                          {row.floorNumber}
                         </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {row.price}
+                        <StyledTableCell align="left">
+                          {row.flatType}
                         </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {row.brand}
+                        <StyledTableCell align="left">
+                          {Boolean(row.status)?"Not Available":"Available"}
                         </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {row.stock}
+                        <StyledTableCell align="left">
+                          {row.rent}
                         </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {row.category}
-                        </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {row.returnPolicy}
-                        </StyledTableCell>
-                        <StyledTableCell align="right">
+                        <StyledTableCell align="left">
                           <EditIcon
                             sx={{ cursor: "pointer" }}
                             onClick={() => handleOpenEditForm(row)}
                           />
                           <DeleteIcon
                             sx={{ cursor: "pointer", ml: 2 }}
-                            onClick={() => deleteProduct(row.id)}
+                            onClick={() => deleteFlat(row.id)}
                           />
                         </StyledTableCell>
                       </StyledTableRow>
@@ -729,11 +624,54 @@ const SellerPanel = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-          </Box>
+          </Box>}
+        </Box>
+
+
+        <Box display="flex" sx={{ mt: 10, ml: 2 }}>
+          <Typography variant="h5" color="initial">
+            Announcements
+          </Typography>
+          <Button
+            variant="contained"
+            color="secondary"
+            sx={{ ml: "auto" }}
+            onClick={() => setOpenAnnouncementForm(true)}
+          >
+            Add Announcement
+          </Button>
+        </Box>
+        <Box sx={{mt: 2, ml: 2}}>
+
+              {announcements && announcements.map(announcement =>
+              
+              <Box sx={{p: 2, border: "1px solid grey", borderRadius: 4, mt: 1, bgcolor: "silver"}}>
+                <Box display="flex">
+                <Typography>{announcement.title}</Typography>
+                <Box sx={{flexGrow: 1}}></Box>
+                    <EditIcon
+                      sx={{ cursor: "pointer", ml: "auto" }}
+                      onClick={() => {
+                        setDetail(announcement.detail);
+                        setTitle(announcement.title);
+                        setAnnouncementId(announcement.id);
+                        setOpenAnnouncementForm(true);
+                      }}
+                    />
+                    <DeleteIcon
+                      sx={{ cursor: "pointer", ml: 2 }}
+                      onClick={() => deleteAnnouncement(announcement.id)}
+                    />
+                  </Box>
+                
+                <Divider sx={{height: "0.5px", bgcolor: "grey"}}/>
+                <Typography sx={{mt: 2}}>{announcement.detail}</Typography>
+              </Box>)}
+
         </Box>
       </Box>
     </div>
   )
 }
 
-export default SellerPanel
+export default SecretaryPanel

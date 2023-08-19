@@ -7,7 +7,6 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import TitleLogo from "../images/logo.png";
 import { useNavigate } from "react-router-dom";
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import CallIcon from '@mui/icons-material/Call';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
@@ -20,6 +19,7 @@ import {
   Menu,
   MenuItem,
 } from "@mui/material";
+import { Notifications } from "@mui/icons-material";
 
 export default function Header() {
   const loggedInUser = localStorage.getItem("loggedInUser");
@@ -55,9 +55,9 @@ export default function Header() {
               src={TitleLogo}
             />
           </IconButton>
-          {/* <Button onClick={()=> navigate("/")} sx={{ml: 1, color: "#fff", fontSize: 15, textTransform: 'none'}}>Home</Button>
-          <Button sx={{ml: 0.5, color: "#fff", fontSize: 15, textTransform: 'none'}}><a href="/#shop" style={{textDecoration: "none", color: "#fff"}}>Shop</a></Button>
-          <Button onClick={()=> navigate("/my-orders")} sx={{ml: 0.5, color: "#fff", fontSize: 15, textTransform: 'none'}}><a style={{textDecoration: "none", color: "#fff"}}>Orders</a></Button> */}
+          <Button onClick={()=> navigate("/")} sx={{ml: 1, color: "#fff", fontSize: 15, textTransform: 'none'}}>Home</Button>
+          <Button onClick={()=> navigate("/announcements")} sx={{ml: 0.5, color: "#fff", fontSize: 15, textTransform: 'none'}}>Announcements</Button>
+          <Button onClick={()=> navigate("/events")} sx={{ml: 0.5, color: "#fff", fontSize: 15, textTransform: 'none'}}><a style={{textDecoration: "none", color: "#fff"}}>Events</a></Button>
           <Box sx={{flexGrow: 1}}></Box>
           {role && role.toUpperCase() === "ADMIN" && (
             <IconButton
@@ -70,10 +70,10 @@ export default function Header() {
             </IconButton>
           )}
 
-          {role && role.toUpperCase() === "SELLER" && (
+          {role && role.toUpperCase() === "SECRETARY" && (
             <IconButton
-              title="Seller Panel"
-              onClick={() => navigate("/seller-panel")}
+              title="Secretary Panel"
+              onClick={() => navigate("/secretary-panel")}
               color="inherit"
               sx={{ marginLeft: 0 }}
             >
@@ -81,16 +81,14 @@ export default function Header() {
             </IconButton>
           )}
 
-          {role && role.toUpperCase() === "USER" && (
             <IconButton
-              title="Go To Cart"
-              onClick={() => navigate("/my-cart")}
+              title="Notifications"
+              onClick={() => navigate("/notifications")}
               color="inherit"
-              sx={{ marginLeft: 0 }}
+              sx={{ marginLeft: 1 }}
             >
-              <ShoppingCartIcon sx={{color: "green"}}/>
+              <Notifications sx={{color: "white"}}/>
             </IconButton>
-          )}
 
           <IconButton
              title="Contact Us"

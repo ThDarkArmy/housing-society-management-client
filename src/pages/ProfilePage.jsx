@@ -399,7 +399,6 @@ const ProfilePage = () => {
                                         >
                                             Update Profile
                                         </Button>
-
                                     </Box>
                                 </Box>
                             </Container>

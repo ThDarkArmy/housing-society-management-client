@@ -53,17 +53,19 @@ const Home = () => {
           <Box sx={{ mt: 2, padding: 1 }} id="shop">
             <TextField onChange={(e) => setSearchText(e.target.value)} fullWidth placeholder="Search" />
           </Box>
-
-                  <Grid container spacing={3}>
-                    {buildingsToDisplay
-                      .map((building) => (
-                        <Grid item key={building.id}>
-                          <BuildingCard
-                            building={building}
-                          />
-                        </Grid>
-                      ))}
-                  </Grid>
+          <Box sx={{mt: 7, p: 1}}>
+          <Grid container spacing={3}>
+            {buildingsToDisplay
+              .map((building) => (
+                <Grid item key={building.id}>
+                  <BuildingCard
+                    building={building}
+                  />
+                </Grid>
+              ))}
+          </Grid>
+          </Box>
+          
         </div>
       </Box>
     </>

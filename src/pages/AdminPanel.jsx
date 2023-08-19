@@ -4,8 +4,18 @@ import axios from "axios";
 
 import {
   Box,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
+  TextField,
   Typography,
+  Select,
+  MenuItem,
+  Divider
 } from "@mui/material";
+
 import { styled } from "@mui/material/styles";
 import MuiAlert from "@mui/material/Alert";
 import EditIcon from "@mui/icons-material/Edit";
@@ -18,7 +28,6 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Snackbar from "../components/Snackbar";
-
 
 import { useNavigate } from "react-router-dom";
 
@@ -52,11 +61,19 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
-  const [openSuccessSnack, setOpenSuccessSnack] = useState(false);
-  const [openErrorSnack, setOpenErrorSnack] = useState(false);
-  const [successMsg, setSuccessMsg] = useState();
-  const [errorMsg, setErrorMsg] = useState();
-  const [product, setProduct] = useState();
+  const [buildings, setBuildings] = useState();
+
+  const [showValidationError, setshowValidationError] = useState(false);
+
+  const [openBuildingForm, setOpenBuildingForm] = useState(false);
+  const [openSecretaryForm, setOpenSecretaryForm] = useState(false);
+
+  const [address, setAddress] = useState("");
+  const [name, setName] = useState("");
+  const [buildingId, setBuildingId] = useState("");
+  const [ numberOfFlats, setNumberOfFlats] = useState("");
+  const [ image, setImage] = useState(null);
+  const [ secretaryId, setSecretaryId] = useState("");
 
   const [users, setusers] = useState([]);
 
@@ -76,11 +93,17 @@ const AdminPanel = () => {
 },[])
 
 
-  const deleteProduct = async (productId) => {
+const showSnackbar = (msg, severity) => {
+  setSnackbarMessage(msg);
+  setSnackbarSeverity(severity);
+  setOpenSnackbar(true);
+}
+
+  const deleteBuilding = async (buildingId) => {
     try {
       const response = await axios({
         method: "delete",
-        url: BASE_URL + "/products/" + productId,
+        url: BASE_URL + "/buildings/" + buildingId,
         headers: {
           "content-type": "application/json",
           Authorization: "Bearer " + token,
@@ -88,36 +111,32 @@ const AdminPanel = () => {
       });
 
       if (response.data) {
-        setOpenSuccessSnack(true);
-        setSuccessMsg("Product deleted successfully");
-        let prd = product.filter((product) => product.id !== productId);
-        setProduct(prd);
+        showSnackbar("Building deleted successfully", "success")
+        let prd = buildings.filter((building) => building.id !== buildingId);
+        setBuildings(prd);
       }
     } catch (err) {
       console.log(err);
-      setOpenErrorSnack(true);
-      setErrorMsg("Error occured while deleting product");
+      showSnackbar("Error occured while deleting building", "error")
     }
   };
 
 
-  const loadProducts = async () => {
+  const loadBuildings = async () => {
       try {
         const response = await axios({
           method: "get",
-          url: BASE_URL + "/products/all",
+          url: BASE_URL + "/buildings",
           headers: {
             "content-type": "application/json",
             Authorization: "Bearer " + token,
           }
         });
         if (response.data) {
-          setProduct(response.data)
+          setBuildings(response.data)
         }
       } catch (err) {
         console.log(err);
-        setOpenErrorSnack(true);
-        setErrorMsg("Error occured while adding product");
       }
   };
 
@@ -136,8 +155,6 @@ const AdminPanel = () => {
       }
     } catch (err) {
       console.log(err);
-      setOpenErrorSnack(true);
-      setErrorMsg("Error occured while loading users");
     }
 };
 
@@ -152,19 +169,124 @@ const deleteUser = async (id) => {
       }
     });
     if (response.data) {
-      setOpenSuccessSnack(true);
-      setSuccessMsg("User deleted successfully");
+      showSnackbar("User deleted successfully", "success")
     }
   } catch (err) {
     console.log(err);
-    setOpenErrorSnack(true);
-    setErrorMsg("Error occured while deleteing users");
+    showSnackbar("Error occured while deleteing users", "error")
+  }
+};
+
+const addBuilding = async () => {
+  if (
+    name === "" ||
+    address === "" ||
+    numberOfFlats==="" ||
+    image === null
+  ) {
+    setshowValidationError(true);
+  } else {
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("address", address);
+    formData.append("numberOfFlats", numberOfFlats);
+    formData.append("image", image);
+    try {
+      const response = await axios({
+        method: "post",
+        url: BASE_URL + "/buildings",
+        headers: {
+          "content-type": "multipart/form-data",
+          Authorization: "Bearer " + token,
+        },
+        data: formData
+      });
+
+      if (response.data) {
+        setBuildings([...buildings, response.data]);
+        showSnackbar("Building added successfully", "success");
+        setOpenBuildingForm(false);
+        setAddress("");
+        setName("");
+        setBuildingId("")
+      }
+    } catch (err) {
+      console.log(err);
+      showSnackbar("Error occured while adding buildings", "error");
+    }
+  }
+};
+
+const updateBuilding = async () => {
+  if (
+    name === "" ||
+    address === "" ||
+    numberOfFlats===""
+  ) {
+    setshowValidationError(true);
+  } else {
+    const buildingData = { name, address, numberOfFlats };
+    try {
+      const response = await axios({
+        method: "put",
+        url: BASE_URL + "/buildings/"+buildingId,
+        headers: {
+          "content-type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        data: buildingData
+      });
+
+      if (response.data) {
+        const ann = buildings.map(a=> a.id===response.data.id ? response.data: a);
+        setBuildings(ann);
+        showSnackbar("Building updated successfully", "success");
+        setOpenBuildingForm(false);
+        setAddress("");
+        setName("");
+        setBuildingId("")
+      }
+    } catch (err) {
+      console.log(err);
+      showSnackbar("Error occured while updating buildings", "error");
+    }
   }
 };
 
 
+const assignSecretary = async () => {
+  if(!secretaryId){
+    setshowValidationError(true);
+    return;
+  }
+    try {
+      const response = await axios({
+        method: "post",
+        url: BASE_URL + "/buildings/"+buildingId+"/assign-secretary/"+secretaryId,
+        headers: {
+          "content-type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        data: {}
+      });
+
+      if (response.data) {
+        const ann = buildings.map(a=> a.id===response.data.id ? response.data: a);
+        setBuildings(ann);
+        showSnackbar("Secretary assigned successfully", "success");
+        setOpenSecretaryForm(false);
+        setSecretaryId("")
+        setBuildingId("")
+      }
+    } catch (err) {
+      console.log(err);
+      showSnackbar("Error occured while assigning secretary", "error");
+    }
+};
+
+
   useEffect(() => {
-   loadProducts();
+   loadBuildings();
    loadUsers();
   }, []);
 
@@ -179,30 +301,36 @@ const deleteUser = async (id) => {
             <Snackbar openSnackbar={openSnackbar} setOpenSnackbar={setOpenSnackbar} snackbarMessage={snackbarMessage} snackbarSeverity={snackbarSeverity} />
             <Box display="flex">
             <Typography variant="h5" color="initial">
-             Products
+             Buildings
             </Typography>
+            <Button
+              variant="contained"
+              color="secondary"
+              sx={{ ml: "auto" }}
+              onClick={() => setOpenBuildingForm(true)}
+            >
+              Add Building
+            </Button>
           </Box>
           <Box sx={{ mt: 2 }}>
             <TableContainer component={Paper}>
               <Table sx={{ minWidth: 700 }} aria-label="customized table">
                 <TableHead>
                   <TableRow>
-                    <StyledTableCell>Product (Id)</StyledTableCell>
+                    <StyledTableCell>Building (Id)</StyledTableCell>
                     <StyledTableCell align="right">Name</StyledTableCell>
-                    <StyledTableCell align="right">Manufacturing Date</StyledTableCell>
+                    <StyledTableCell align="right">Address</StyledTableCell>
                     <StyledTableCell align="right">
-                      Price
+                      Number of Flats
                     </StyledTableCell>
-                    <StyledTableCell align="right">Brand</StyledTableCell>
-                    <StyledTableCell align="right">Stock</StyledTableCell>
-                    <StyledTableCell align="right">Category</StyledTableCell>
-                    <StyledTableCell align="right">Return Policy</StyledTableCell>
+                    <StyledTableCell align="right">Secretary</StyledTableCell>
+                    <StyledTableCell align="right">Image</StyledTableCell>
                     <StyledTableCell align="right">Actions</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {product &&
-                    product.map((row) => (
+                  {buildings &&
+                    buildings.map((row) => (
                       <StyledTableRow key={row.id}>
                         <StyledTableCell component="th" scope="row">
                           {row.id}
@@ -215,27 +343,34 @@ const deleteUser = async (id) => {
                           {row.name}
                         </StyledTableCell>
                         <StyledTableCell align="right">
-                          {row.manufacturingDate}
+                          {row.address}
                         </StyledTableCell>
                         <StyledTableCell align="right">
-                          {row.price}
+                          {row.numberOfFlats}
                         </StyledTableCell>
                         <StyledTableCell align="right">
-                          {row.brand}
+                          {row.user ? row?.user?.name : <Button onClick={()=> {
+                            setBuildingId(row.id);
+                            setOpenSecretaryForm(true);
+                          }}>Assign Secretary</Button> }
                         </StyledTableCell>
                         <StyledTableCell align="right">
-                          {row.stock}
+                          <img height="30" width="30" src={row.imageUrl}/>
                         </StyledTableCell>
                         <StyledTableCell align="right">
-                          {row.category}
-                        </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {row.returnPolicy}
-                        </StyledTableCell>
-                        <StyledTableCell align="right">
+                          <EditIcon
+                            sx={{ cursor: "pointer", ml: "auto" }}
+                            onClick={() => {
+                              setAddress(row.address);
+                              setName(row.name);
+                              setBuildingId(row.id);
+                              setNumberOfFlats(row.numberOfFlats);
+                              setOpenBuildingForm(true);
+                            }}
+                          />
                           <DeleteIcon
                             sx={{ cursor: "pointer", ml: 2 }}
-                            onClick={() => deleteProduct(row.id)}
+                            onClick={() => deleteBuilding(row.id)}
                           />
                         </StyledTableCell>
                       </StyledTableRow>
@@ -307,6 +442,110 @@ const deleteUser = async (id) => {
           </Box>
         </Box>
       </Box>
+
+      <Dialog open={openBuildingForm} onClose={() => setOpenBuildingForm(false)}>
+          <DialogTitle>{buildingId ? "Edit Building": "Add Building"}</DialogTitle>
+          <DialogContent>
+            {showValidationError && (
+              <Alert severity="error">All the fields are mandatory</Alert>
+            )}
+             <TextField
+              size="small"
+              label="Name"
+              fullWidth
+              onChange={(e) => {
+                setshowValidationError(false);
+                setName(e.target.value);
+              }}
+              value={name}
+              sx={{ mt: 2 }}
+            />
+
+            <TextField
+              size="small"
+              label="Address"
+              fullWidth
+              onChange={(e) => {
+                setshowValidationError(false);
+                setAddress(e.target.value);
+              }}
+              value={address}
+              sx={{ mt: 2 }}
+            />
+             <TextField
+              size="small"
+              label="Number of Flats"
+              fullWidth
+              onChange={(e) => {
+                setshowValidationError(false);
+                setNumberOfFlats(e.target.value);
+              }}
+              value={numberOfFlats}
+              sx={{ mt: 2 }}
+            />
+         {!buildingId && <TextField
+            size="small"
+            label="Detail"
+            fullWidth
+            onChange={(e) => {
+              setshowValidationError(false);
+              setImage(e.target.files[0]);
+            }}
+            type="file"
+            sx={{ mt: 2 }}
+          />}
+            
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {setOpenBuildingForm(false)
+              setBuildingId("");
+              setAddress("");
+              setName("");
+            }}>Cancel</Button>
+            <Button onClick={()=> {
+              if(buildingId){
+                updateBuilding();
+              }else{
+                addBuilding();
+              }
+            }}>{buildingId? "Update" : "Add"}</Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={openSecretaryForm} onClose={() => setOpenSecretaryForm(false)}>
+          <DialogTitle>Assign Secretary</DialogTitle>
+          <DialogContent>
+            {showValidationError && (
+              <Alert severity="error">Please choose some secretary</Alert>
+            )}
+
+          <Select
+            size="small"
+            label="Select Secretary"
+            placeholder="Select Secretary"
+            fullWidth
+            type="text"
+            onChange={(e) => {
+              setshowValidationError(false);
+              setSecretaryId(e.target.value);
+            }}
+            sx={{ mt: 2 }}
+          >
+            {users.filter(user=> user.role==="SECRETARY" && !user.building).map(user=> <MenuItem value={user.id}>{user.name}</MenuItem>)}
+            {users.filter(user=> user.role==="SECRETARY" && !user.building).length===0 && <MenuItem>No Secretary Available</MenuItem>}
+          </Select>
+             
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {setOpenSecretaryForm(false)
+               setSecretaryId("")
+               setBuildingId("")
+            }}>Cancel</Button>
+            <Button onClick={()=> {
+              assignSecretary();
+            }}>{buildingId? "Update" : "Add"}</Button>
+          </DialogActions>
+        </Dialog>
     </div>
   )
 }
