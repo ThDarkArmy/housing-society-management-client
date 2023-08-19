@@ -239,7 +239,6 @@ export default function Register({ handleHaveAccount }) {
                     onChange={(e) => { setRole(e.target.value)
                     }}
                   >
-                    <MenuItem value={"ADMIN"}>Admin</MenuItem>
                     <MenuItem value={"SECRETARY"}>Secretary</MenuItem>
                     <MenuItem value={"USER"}>User</MenuItem>
                   </Select>

@@ -152,7 +152,7 @@ const FlatCard = ({ flat, building }) => {
     try {
       const response = await axios({
         method: "post",
-        url: BASE_URL + "/flats/book-flat/" + flatId,
+        url: BASE_URL + "/flats/book-flat/" + flat.id,
         headers: {
           "content-type": "application/json",
           Authorization: "Bearer " + token,

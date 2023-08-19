@@ -29,7 +29,6 @@ const BuildingPage = () => {
         try {
           const response = await axios.get(`${BASE_URL}/buildings/by-id/${id}`);
           if (response.data) {
-            console.log(response.data);
             setBuilding(response.data);
             setFlats(response.data.flats);
           }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -18,8 +18,14 @@ import {
   DialogActions,
   Menu,
   MenuItem,
+  Drawer,
+  Divider
 } from "@mui/material";
-import { Notifications } from "@mui/icons-material";
+import NotificationIcon from "@mui/icons-material/Notifications";
+import axios from "axios";
+
+
+const BASE_URL = "http://localhost:8000/api/v1";
 
 export default function Header() {
   const loggedInUser = localStorage.getItem("loggedInUser");
@@ -27,11 +33,47 @@ export default function Header() {
   const role = localStorage.getItem("role");
 
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
   const [logOutAnchorEl, setLogOutAnchorEl] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("");
 
   const openLogout = Boolean(logOutAnchorEl);
 
   const navigate = useNavigate();
+
+
+  const showSnackbar = (msg, severity) => {
+    setSnackbarMessage(msg);
+    setSnackbarSeverity(severity);
+    setOpenSnackbar(true);
+  }
+
+  const loadNotifications = async () => {
+    try {
+      const response = await axios({
+        method: "get",
+        url: BASE_URL + "/notifications",
+        headers: {
+          "content-type": "application/json",
+          Authorization: "Bearer " + token,
+        }
+      });
+
+      if (response.data) {
+        setNotifications(response.data);
+      }
+    } catch (err) {
+      showSnackbar("Some error occured while loading event", "error");
+    }
+  }
+
+  useEffect(()=> {
+    loadNotifications();
+  },[])
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -83,11 +125,11 @@ export default function Header() {
 
             <IconButton
               title="Notifications"
-              onClick={() => navigate("/notifications")}
+              onClick={() => setShowNotification(true)}
               color="inherit"
               sx={{ marginLeft: 1 }}
             >
-              <Notifications sx={{color: "white"}}/>
+              <NotificationIcon sx={{color: "white"}}/>
             </IconButton>
 
           <IconButton
@@ -174,13 +216,7 @@ export default function Header() {
           "aria-labelledby": "basic-button",
         }}
       >
-        {role==="USER" && <MenuItem
-          onClick={() => {
-            navigate("/my-orders");
-          }}
-        >
-          My Orders
-        </MenuItem>}
+       
         <MenuItem
           onClick={() => {
             navigate("/profile");
@@ -199,6 +235,37 @@ export default function Header() {
         </MenuItem>
 
       </Menu>
+
+      <Drawer
+        anchor={"right"}
+        open={showNotification}
+        onClose={()=>setShowNotification(false)}
+        PaperProps={{
+          sx: { width: "300px" },
+        }}
+      >
+        <Box sx={{p: 1}}>
+          <Box sx={{mt: 1, textAlign: "center", width: "100%"}}>
+            <Typography style={{fontSize: 20}}>Notifications</Typography>
+          </Box>
+        {
+          notifications && notifications.map(notification => 
+          <Box sx={{p: 1, mt: 1, border: "1px solid grey", borderRadius: 4}}>
+            <Typography variant="h7">
+            {notification.title}
+            </Typography>
+            <Divider sx={{height: "0.5px", color: "grey", mt: 0.5}}/>
+            <Typography>
+              {notification.detail.substring(1, notification.detail.length)}
+              {console.log("not::", notification.detail.substring(0, notification.detail.length))}
+            </Typography>
+           
+          </Box>)
+
+        }
+        </Box>
+        
+      </Drawer>
     </Box>
   );
 }

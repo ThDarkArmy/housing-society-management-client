@@ -554,7 +554,7 @@ const SecretaryPanel = () => {
             <Box sx={{ml: 2}}>
              {building ? <BuildingCard building={building}/>: <Typography>Building not assigned yet!</Typography>}
             </Box>
-         {flats && <Box display="flex" sx={{mt: 5, ml: 2}}>
+         {building && <Box display="flex" sx={{mt: 5, ml: 2}}>
             <Typography variant="h5" color="initial">
               Flats
             </Typography>
@@ -626,9 +626,8 @@ const SecretaryPanel = () => {
             </TableContainer>
           </Box>}
         </Box>
-
-
-        <Box display="flex" sx={{ mt: 10, ml: 2 }}>
+    {building &&  <>
+      <Box display="flex" sx={{ mt: 10, ml: 2 }}>
           <Typography variant="h5" color="initial">
             Announcements
           </Typography>
@@ -669,6 +668,8 @@ const SecretaryPanel = () => {
               </Box>)}
 
         </Box>
+      </>}
+       
       </Box>
     </div>
   )
