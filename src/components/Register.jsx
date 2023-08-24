@@ -8,7 +8,6 @@ import Checkbox from "@mui/material/Checkbox";
 import Link from "@mui/material/Link";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -16,7 +15,10 @@ import axios from "axios";
 import Alert from '@mui/material/Alert';
 import { useNavigate } from "react-router-dom";
 
-import { MenuItem, InputLabel, FormControl, Select,  } from "@mui/material";
+import { MenuItem, InputLabel, FormControl, Select, Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent  } from "@mui/material";
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
@@ -33,6 +35,13 @@ export default function Register({ handleHaveAccount }) {
   const [addressError, setaddressError] = useState(false)
   const [contactNumberError, setContactNumberError] = useState(false)
   const [role, setRole] = useState();
+  const [email, setEmail] = useState();
+
+  const [openOtp, setOpenOtp] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [invalidOtp, setInvalidOtp] = useState(false);
  
   const [passwordError, setPasswordError] = useState(false)
 
@@ -122,8 +131,7 @@ export default function Register({ handleHaveAccount }) {
 
       if(response.data){
           setSuccess(true)
-          setTimeout(()=>  handleHaveAccount(true), 3000)
-         
+          setOpenOtp(true);
       }
 
       setTimeout(()=> setSuccess(false), 5000)
@@ -134,6 +142,36 @@ export default function Register({ handleHaveAccount }) {
         setTimeout(()=> setError(false), 5000)
     }
   };
+
+  const handleVerifyOtp = async () => {
+    setInvalidOtp(false);
+    if(otp.length!==4){
+      setOtpError("Please provide 4 digit valid otp");
+      return;
+    }
+    try{
+
+      const response = await axios({
+        method: "post",
+        url: BASE_URL + "/users/verify-otp",
+        data: JSON.stringify({otp:otp, email:email}), 
+        headers: { "Content-Type": "application/json"}
+      });
+
+      if(response.data==="Otp verified successfully"){
+        console.log(response.data);
+        setOtpVerified(true);
+        setOpenOtp(false)
+        setTimeout(()=>  handleHaveAccount(true), 3000)
+      }else{
+        setInvalidOtp(true);
+        console.log(response.data);
+      }
+
+    }catch(err){
+      console.log("error", err)
+    }
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -147,6 +185,8 @@ export default function Register({ handleHaveAccount }) {
             alignItems: "center",
           }}
         >
+          
+           {otpVerified && <Alert severity="success">Otp verified successfully, kindly proceed with login</Alert>}
           {error && <Alert severity="error">Error occured, while registeration</Alert>}
         {success && <Alert severity="success">Registration successful, kindly proceed with login</Alert>}
           <Typography component="h1" variant="h5">
@@ -189,7 +229,9 @@ export default function Register({ handleHaveAccount }) {
                 <TextField
                   error={emailError}
                   helperText={emailError?"Enter valid email":""}
-                  onChange={(e)=> setEmailError(false)}
+                  onChange={(e)=> {
+                    setEmail(e.target.value);
+                    setEmailError(false)}}
                   required
                   fullWidth
                   id="email"
@@ -290,6 +332,31 @@ export default function Register({ handleHaveAccount }) {
             </Grid>
           </Box>
         </Box>
+        <Dialog open={openOtp} onClose={() => setOpenOtp(false)}>
+          <DialogTitle>Verify Otp</DialogTitle>
+          <DialogContent>
+          {invalidOtp && <Alert severity="error">Invalid otp, try again</Alert>}
+            <Box sx={{display: "flex", justifyContent: "center", alignItems: "center", padding: 3}}>
+                  <TextField 
+                  label="otp" 
+                  value={otp} 
+                  onChange={(e)=> setOtp(e.target.value)}
+                  error={Boolean(otpError)}
+                  helperText={otpError}
+                  />
+            </Box>
+             
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {
+              setOpenOtp(false);
+              
+            }}>Cancel</Button>
+            <Button onClick={()=> {
+              handleVerifyOtp();
+            }}>Verify</Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </ThemeProvider>
   );
