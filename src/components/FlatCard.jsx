@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 
 import {
@@ -20,7 +20,9 @@ import Snackbar from "./Snackbar";
 
 import { useNavigate } from "react-router-dom";
 import SnackBar from "./Snackbar";
+import { useReactToPrint } from 'react-to-print';
 
+import Receipt from "./Receipt";
 const BASE_URL = "http://localhost:8000/api/v1";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -33,6 +35,7 @@ const FlatCard = ({ flat, building }) => {
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
+  const loggedInUser = localStorage.getItem("loggedInUser");
   const [showValidationError, setshowValidationError] = useState(false);
   const [flatId, setFlatId] = useState(0);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -53,6 +56,8 @@ const FlatCard = ({ flat, building }) => {
     const [lastName, setLastName] = useState();
     const [email, setEmail] = useState();
     const [contactNumber, setContactNumber] = useState();
+
+    const [openReceipt, setOpenReceipt] = useState(false);
 
 
 
@@ -146,6 +151,12 @@ const FlatCard = ({ flat, building }) => {
         }
     };
 
+    const componentRef = useRef();
+    const printReceipt = useReactToPrint({
+      content: () => componentRef.current,
+    });
+  
+
 
 
   const bookFlat = async () => {
@@ -161,9 +172,11 @@ const FlatCard = ({ flat, building }) => {
       });
 
       if (response.data) {
+        setOpenReceipt(true)
         showSnackbar("Flat booked successfully", "success");
         setFlatId("");
         setPaymentDialog(false);
+       
       }
     } catch (err) {
       showSnackbar("Some error occured while booking flat", "error");
@@ -244,9 +257,6 @@ const FlatCard = ({ flat, building }) => {
                 {success && <Alert severity="success">Profile updated successfully</Alert>}
 
                 <Box
-                  //component="form"
-                  //noValidate
-                  // onSubmit={handleSubmit}
                   sx={{ mt: 3 }}
                 >
                   <Grid container spacing={2}>
@@ -353,7 +363,23 @@ const FlatCard = ({ flat, building }) => {
        
       </Dialog>
 
+      <Dialog open={openReceipt} onClose={() => setOpenReceipt(false)}>
+      <DialogContent>
+          <Box sx={{ padding: 2 }}>
+           <Receipt ref={componentRef} owner={loggedInUser} building={building} flat={flat}/>
+          </Box>
+        </DialogContent>
+      <DialogActions>
+          <Button onClick={() => setOpenReceipt(false)}>Cancel</Button>
+          <Button onClick={()=> {
+            
+            printReceipt()
+            setOpenReceipt(false);
+            }}>Print Receipt</Button>
+        </DialogActions>
+      </Dialog>
       <Snackbar openSnackbar={openSnackbar} setOpenSnackbar={setOpenSnackbar} snackbarMessage={snackbarMessage} snackbarSeverity={snackbarSeverity} />
+
     </div>
   )
 }

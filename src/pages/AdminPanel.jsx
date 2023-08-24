@@ -85,8 +85,8 @@ const AdminPanel = () => {
     if(!token){
       navigate("/login-register");
   }
-    if(role==="SELLER"){
-      navigate("/seller-panel");
+    if(role==="SECRETARY"){
+      navigate("/secretary-panel");
     }else if(role==="USER"){
       navigate("/");
     }
