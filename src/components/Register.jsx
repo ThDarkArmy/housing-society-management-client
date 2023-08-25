@@ -111,6 +111,14 @@ export default function Register({ handleHaveAccount }) {
       setContactNumberError(false)
     }
 
+    const regex = /^[7-9]\d{9}$/;
+
+    if (regex.test(contactNumber)) {
+      setContactNumberError(true)
+    }else{
+      setContactNumberError(false)
+    }
+
 
     if(password===""){
       er=true;

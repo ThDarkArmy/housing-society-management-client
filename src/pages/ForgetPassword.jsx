@@ -18,9 +18,10 @@ const ForgetPassword = () => {
       password: password,
     };
 
-    if (!email) throw "Invalid Data";
-    if (!password) throw "Invalid Data";
+    
     try {
+      if (!email) throw "Invalid Data";
+    if (!password) throw "Invalid Data";
       const response = await axios({
         method: "put",
         url: BASE_URL + "/users/reset-password",
