@@ -3,6 +3,10 @@ import axios from "axios";
 
 import { Grid, TextField, Button, Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { MenuItem, InputLabel, FormControl, Select, Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent , Alert } from "@mui/material";
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
@@ -11,6 +15,12 @@ const ForgetPassword = () => {
 
   const [email, setEmail] = useState(null);
   const [password, setPassword] = useState(null);
+
+  const [openOtp, setOpenOtp] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [invalidOtp, setInvalidOtp] = useState(false);
 
   const handleResetPassword = async () => {
     const data = {
@@ -30,9 +40,7 @@ const ForgetPassword = () => {
       });
 
       if (response.status === 200) {
-        alert("Password reset successfull");
-        console.log("Response Data", response.data);
-        navigate("/login-register");
+        setOpenOtp(true);
       } else {
         throw "Error Occured";
       }
@@ -40,6 +48,36 @@ const ForgetPassword = () => {
       alert("Password reset failed");
     }
   };
+
+  const handleVerifyOtp = async () => {
+    setInvalidOtp(false);
+    if(otp.length!==4){
+      setOtpError("Please provide 4 digit valid otp");
+      return;
+    }
+    try{
+
+      const response = await axios({
+        method: "post",
+        url: BASE_URL + "/users/verify-otp-password",
+        data: JSON.stringify({otp:otp, email:email}), 
+        headers: { "Content-Type": "application/json"}
+      });
+
+      if(response.data==="Otp verified successfully"){
+        console.log(response.data);
+        setOtpVerified(true);
+        setOpenOtp(false)
+        navigate("/login-register");
+      }else{
+        setInvalidOtp(true);
+        console.log(response.data);
+      }
+
+    }catch(err){
+      console.log("error", err)
+    }
+  }
 
   return (
     <div style={{ paddingLeft: "30%", paddingTop: 150 }}>
@@ -76,6 +114,32 @@ const ForgetPassword = () => {
           Reset Password
         </Button>
       </Box>
+
+      <Dialog open={openOtp} onClose={() => setOpenOtp(false)}>
+          <DialogTitle>Verify Otp</DialogTitle>
+          <DialogContent>
+          {invalidOtp && <Alert severity="error">Invalid otp, try again</Alert>}
+            <Box sx={{display: "flex", justifyContent: "center", alignItems: "center", padding: 3}}>
+                  <TextField 
+                  label="otp" 
+                  value={otp} 
+                  onChange={(e)=> setOtp(e.target.value)}
+                  error={Boolean(otpError)}
+                  helperText={otpError}
+                  />
+            </Box>
+             
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {
+              setOpenOtp(false);
+              
+            }}>Cancel</Button>
+            <Button onClick={()=> {
+              handleVerifyOtp();
+            }}>Verify</Button>
+          </DialogActions>
+        </Dialog>
     </div>
   );
 };
