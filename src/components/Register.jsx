@@ -113,7 +113,7 @@ export default function Register({ handleHaveAccount }) {
 
     const regex = /^[7-9]\d{9}$/;
 
-    if (regex.test(contactNumber)) {
+    if (!regex.test(contactNumber)) {
       setContactNumberError(true)
     }else{
       setContactNumberError(false)
