@@ -19,8 +19,13 @@ import {
   Menu,
   MenuItem,
   Drawer,
-  Divider
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
 import NotificationIcon from "@mui/icons-material/Notifications";
 import axios from "axios";
 
@@ -75,9 +80,82 @@ export default function Header() {
     loadNotifications();
   },[])
 
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="fixed" sx={{ background: `linear-gradient(to right, #12c2e9, #c471ed, #f64f59);` }}>
+       <AppBar position="fixed" sx={{ background: `linear-gradient(to right, #12c2e9, #c471ed, #f64f59);` }}>
+      <Toolbar>
+        <IconButton
+          onClick={handleDrawerToggle}
+          size="large"
+          edge="start"
+          color="inherit"
+          aria-label="menu"
+          sx={{ ml: 0, display: {lg: "none", md: "none"} }}
+        >
+          {drawerOpen ? <CloseIcon /> : <MenuIcon />}
+        </IconButton>
+        <Box component="img" sx={{ height: 17 }} alt="Medical Ecommerce" src={TitleLogo} />
+        <Drawer anchor="top" open={drawerOpen} onClose={handleDrawerToggle}>
+          <List>
+            <ListItem button onClick={() => navigate("/")} sx={{ padding: 2 }}>
+              <ListItemText primary="Home" />
+            </ListItem>
+            <ListItem button onClick={() => navigate("/announcements")} sx={{ padding: 2 }}>
+              <ListItemText primary="Announcements" />
+            </ListItem>
+            <ListItem button onClick={() => navigate("/events")} sx={{ padding: 2 }}>
+              <ListItemText primary="Events" />
+            </ListItem>
+          </List>
+        </Drawer>
+       
+        <Button onClick={()=> navigate("/")} sx={{ml: 1, color: "#fff", fontSize: 15, textTransform: 'none', display: {lg: "block", md: "block", xs: "none", sm: "none"}}}>Home</Button>
+          <Button onClick={()=> navigate("/announcements")} sx={{ml: 0.5, color: "#fff", fontSize: 15, textTransform: 'none',  display: {lg: "block", md: "block", xs: "none", sm: "none"}}}>Announcements</Button>
+          <Button onClick={()=> navigate("/events")} sx={{ml: 0.5, color: "#fff", fontSize: 15, textTransform: 'none',  display: {lg: "block", md: "block", xs: "none", sm: "none"}}}><a style={{textDecoration: "none", color: "#fff"}}>Events</a></Button>
+
+          <Box sx={{ flexGrow: 1 }} />
+        {/* Admin Panel */}
+        {role && role.toUpperCase() === "ADMIN" && (
+          <IconButton title="Admin Panel" onClick={() => navigate("/admin-panel")} color="inherit" sx={{ marginLeft: 0 }}>
+            <AdminPanelSettingsIcon sx={{ color: "green" }} />
+          </IconButton>
+        )}
+        {/* Secretary Panel */}
+        {role && role.toUpperCase() === "SECRETARY" && (
+          <IconButton title="Secretary Panel" onClick={() => navigate("/secretary-panel")} color="inherit" sx={{ marginLeft: 0 }}>
+            <MedicalServicesIcon sx={{ color: "green" }} />
+          </IconButton>
+        )}
+        {/* Notifications */}
+        <IconButton title="Notifications" color="inherit" sx={{ marginLeft: 1 }}>
+          <NotificationIcon sx={{ color: "white" }} />
+        </IconButton>
+        {/* Contact Us */}
+        <IconButton title="Contact Us" color="inherit" sx={{ marginLeft: 3 }}>
+          <CallIcon />
+        </IconButton>
+        <Box sx={{ flexGrow: 0, marginTop: -5, float: "right" }}>
+          {loggedInUser ? (
+            <Box onClick={(event) => setLogOutAnchorEl(event.currentTarget)} title="Profile" sx={{ background: `linear-gradient(to right, #373b44, #4286f4);`, paddingRight: 2, paddingBottom: 0.3, paddingLeft: 2, borderRadius: 3, marginLeft: 4, cursor: "pointer" }}>
+              <Typography variant="h6" sx={{ color: "ThreeDFace", marginTop: 5 }}>
+                {loggedInUser}
+              </Typography>
+            </Box>
+          ) : (
+            <Button onClick={() => navigate("/login-register")} sx={{ color: "blue", marginTop: 5 }}>
+              Login
+            </Button>
+          )}
+        </Box>
+      </Toolbar>
+    </AppBar>
+      {/* <AppBar position="fixed" sx={{ background: `linear-gradient(to right, #12c2e9, #c471ed, #f64f59);` }}>
         <Toolbar>
           <IconButton
             onClick={() => navigate("/")}
@@ -175,7 +253,7 @@ export default function Header() {
             )}
           </Box>
         </Toolbar>
-      </AppBar>
+      </AppBar> */}
       <Dialog
         open={contactDialogOpen}
         onClose={() => setContactDialogOpen(false)}
