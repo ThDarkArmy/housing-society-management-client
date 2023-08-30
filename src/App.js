@@ -16,6 +16,7 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import Announcements from "./pages/Announcements";
 import EventManagementPage from "./pages/EventManagementPage";
+import AboutUs from "./pages/AboutUs";
 
 
 const App = ()=> {
@@ -32,6 +33,7 @@ const App = ()=> {
         <Route path="/buildings/:id" element={<BuildingPage />}/>
         <Route path="/announcements/" element={<Announcements />}/>
         <Route path="/events" element={<EventManagementPage />}/>
+        <Route path="/about-us" element={<AboutUs />}/>
       </Routes>
     </Router>
     <Footer/>

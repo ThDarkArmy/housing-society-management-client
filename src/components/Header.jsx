@@ -163,6 +163,9 @@ export default function Header() {
             <ListItem button onClick={() => navigate("/")} sx={{ padding: 2 }}>
               <ListItemText primary="Home" />
             </ListItem>
+            <ListItem button onClick={() => navigate("/about-us")} sx={{ padding: 2 }}>
+              <ListItemText primary="About Us" />
+            </ListItem>
             <ListItem button onClick={() => navigate("/announcements")} sx={{ padding: 2 }}>
               <ListItemText primary="Announcements" />
             </ListItem>
@@ -200,6 +203,7 @@ export default function Header() {
             />
           </IconButton>
           <Button onClick={()=> navigate("/")} sx={{ml: 1, color: "#fff", fontSize: 15, textTransform: 'none', display: {lg: "block", md: "block", xs: "none", sm: "none"}}}>Home</Button>
+          <Button onClick={()=> navigate("/about-us")} sx={{ml: 1, color: "#fff", fontSize: 15, textTransform: 'none', display: {lg: "block", md: "block", xs: "none", sm: "none"}}}>About Us</Button>
           <Button onClick={()=> navigate("/announcements")} sx={{ml: 0.5, color: "#fff", fontSize: 15, textTransform: 'none', display: {lg: "block", md: "block", xs: "none", sm: "none"}}}>Announcements</Button>
           <Button onClick={()=> navigate("/events")} sx={{ml: 0.5, color: "#fff", fontSize: 15, textTransform: 'none', display: {lg: "block", md: "block", xs: "none", sm: "none"}}}><a style={{textDecoration: "none", color: "#fff"}}>Events</a></Button>
           <Box sx={{flexGrow: 1}}></Box>

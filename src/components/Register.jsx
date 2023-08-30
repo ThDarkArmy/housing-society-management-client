@@ -105,7 +105,6 @@ export default function Register({ handleHaveAccount }) {
 
     if(contactNumber==="" || contactNumber.length!=10){
       er=true;
-      
       setContactNumberError(true)
     }else{
       setContactNumberError(false)
@@ -118,7 +117,6 @@ export default function Register({ handleHaveAccount }) {
     }else{
       setContactNumberError(false)
     }
-
 
     if(password===""){
       er=true;
